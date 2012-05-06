@@ -139,7 +139,7 @@
 		var buffer = new Buffer();
 		buffer.writeString(0, 'RIFF');
 		buffer.writeString(8, 'AVI ');
-		var len = 0;
+		var len = 4;
 		var frames = 0;
 		for (var i=0; i < this.streams.length; ++i) {
 			frames += this.streams[i].frames.length;
@@ -167,7 +167,7 @@
 			hdrl.elements.push(this.streams[i].getHeaderBuffer());
 		}
 		var hdrlBuf = hdrl.getBuffer();
-		buffer.writeBuffer(12, hdrlBuf);
+		buffer.writeBuffer(8 + len, hdrlBuf);
 		len += hdrlBuf.length;
 		
 		var movi = new List('movi');
@@ -176,7 +176,7 @@
 		}
 		
 		var moviBuf = movi.getBuffer();
-		buffer.writeBuffer(12 + len, moviBuf);
+		buffer.writeBuffer(8 + len, moviBuf);
 		len += moviBuf.length;
 		
 		buffer.writeInt(4, len);
