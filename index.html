@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hi</title>
+		<script src="avi.js"></script>
+		<script>
+window.onload = function() {
+	var can = document.getElementById('canvas');
+	var img = new Image();
+	img.src = 'image.jpg';
+	img.onload = function(){
+	    can.width = img.width;
+	    can.height = img.height;
+	    var ctx = can.getContext('2d');
+	    ctx.drawImage(img, 0, 0, img.width, img.height);
+	    
+		var avi = new AVIJS();
+		var stream = new AVIJS.Stream(20, 5, 5);
+		for (var i=0; i < 50; ++i) {
+			stream.addFrame(ctx.getImageData(0, 0, 5, 5).data);
+		}
+		avi.streams.push(stream);
+		console.log(avi.getBuffer());
+		console.log(avi.getBuffer().length);
+		window.location = 'data:video/avi,' + encodeURIComponent(avi.getBuffer());
+	}
+}
+		</script>
+	</head>
+	
+	<body>
+		<canvas id="canvas" width="5" height="5"></canvas>
+	</body>
+</html>
