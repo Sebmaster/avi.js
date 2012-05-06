@@ -43,21 +43,6 @@
 	
 	/**
 	 * @param {number} idx
-	 * @param {number} num 
-	 */
-	Buffer.prototype.writeLong = function(idx, num) {
-		this.buffer[idx] = num & 255;
-		this.buffer[idx + 1] = (num >> 8) & 255;
-		this.buffer[idx + 2] = (num >> 16) & 255;
-		this.buffer[idx + 3] = (num >> 24) & 255;
-		this.buffer[idx + 4] = 0;
-		this.buffer[idx + 5] = 0;
-		this.buffer[idx + 6] = 0;
-		this.buffer[idx + 7] = 0;
-	};
-	
-	/**
-	 * @param {number} idx
 	 * @param {string} str 
 	 */
 	Buffer.prototype.writeString = function(idx, str) {
@@ -223,23 +208,24 @@
 		strh.data.writeInt(36, 0); // suggested buffer size
 		strh.data.writeInt(40, -1); // quality
 		strh.data.writeInt(44, 0); // sampleSize
-		strh.data.writeInt(48, 0); // Rect left
-		strh.data.writeInt(52, 0); // Rect top
-		strh.data.writeInt(56, this.width); // Rect width
-		strh.data.writeInt(60, this.height); // Rect height
+		strh.data.writeShort(48, 0); // Rect left
+		strh.data.writeShort(50, 0); // Rect top
+		strh.data.writeShort(52, this.width); // Rect width
+		strh.data.writeShort(54, this.height); // Rect height
 		list.elements.push(strh);
 		
 		var strf = new Chunk('strf');
-		strf.data.writeLong(0, this.width); // width
-		strf.data.writeLong(8, this.height); // height
-		strf.data.writeShort(16, 1); // planes
-		strf.data.writeShort(18, 32); // bits per pixel
-		strf.data.writeInt(20, 0); // compression
-		strf.data.writeInt(24, 0); // image size
-		strf.data.writeLong(28, 0); // x pixels per meter
-		strf.data.writeLong(36, 0); // y pixels per meter
-		strf.data.writeInt(44, 0); // colortable used
-		strf.data.writeInt(48, 0); // colortable important
+		strf.data.writeInt(0, 40); // struct size
+		strf.data.writeInt(4, this.width); // width
+		strf.data.writeInt(8, this.height); // height
+		strf.data.writeShort(12, 1); // planes
+		strf.data.writeShort(14, 32); // bits per pixel
+		strf.data.writeInt(16, 0); // compression
+		strf.data.writeInt(20, 0); // image size
+		strf.data.writeInt(24, 0); // x pixels per meter
+		strf.data.writeInt(28, 0); // y pixels per meter
+		strf.data.writeInt(32, 0); // colortable used
+		strf.data.writeInt(36, 0); // colortable important
 		list.elements.push(strf);
 		
 		return list;
