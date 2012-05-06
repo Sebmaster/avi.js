@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project name="avi.js" basedir="." default="compile">
+	<property name="PREFIX" value="." />
+	<property description="source folder" name="src" value="${PREFIX}/src" />
+	<property description="public resources" name="dist" value="${PREFIX}/public" />
+	<property description="target file" name="TARGET" value="${dist}/avi.js" />
+	<property description="the path to google closure" name="compiler" location="${PREFIX}/build/compiler.jar" />
+
+	<taskdef name="compilejs" classname="com.google.javascript.jscomp.ant.CompileTask" classpath="${compiler}"/>
+
+	<target name="clean">
+		<delete file="${TARGET}" />
+	</target>
+
+	<target name="compile">
+		<compilejs compilationLevel="simple" warning="verbose" output="${TARGET}">
+			<!--
+			<externs dir="${PREFIX}/externs">
+	      	</externs>
+	      	-->
+
+	  		<sources dir="${src}">
+				<file name="AVI.js" />
+	  		</sources>
+		</compilejs>
+	</target>
+</project>
