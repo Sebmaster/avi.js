@@ -55,7 +55,10 @@
 	 */
 	function AVIJS() {
 		this.settings = {
-			
+			width: 5,
+			height: 5,
+			frames: 0,
+			streams: 0
 		};
 	};
 	
@@ -66,6 +69,20 @@
 		var len = 0;
 		
 		var avih = new AVIJS.Chunk('avih');
+		avih.data.writeInt(0, 66665);
+		avih.data.writeInt(4, 0); // MaxBytesPerSec
+		avih.data.writeInt(8, 1); // Padding (in bytes)
+		avih.data.writeInt(12, 0); // Flags
+		avih.data.writeInt(16, this.settings.frames); // Total Frames
+		avih.data.writeInt(20, 0); // Initial Frames
+		avih.data.writeInt(24, this.settings.streams); // Total Streams
+		avih.data.writeInt(28, 0); // Suggested Buffer size
+		avih.data.writeInt(32, this.settings.width); // pixel width
+		avih.data.writeInt(36, this.settings.height); // pixel height
+		avih.data.writeInt(40, 0); // Reserved int[4]
+		avih.data.writeInt(44, 0);
+		avih.data.writeInt(48, 0);
+		avih.data.writeInt(52, 0);
 		//TODO: Write main header
 		
 		var hdrl = new AVIJS.List('hdrl');
