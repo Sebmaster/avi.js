@@ -82,8 +82,13 @@
 	Chunk.prototype.getBuffer = function() {
 		var buffer = new Buffer();
 		buffer.writeString(0, this.id);
-		buffer.writeInt(4, this.data.length);
 		buffer.writeBuffer(8, this.data);
+		if (this.data.length % 2 == 0) {
+			buffer.writeInt(4, this.data.length);
+		} else {
+			buffer.writeInt(4, this.data.length + 1);
+			buffer.appendArray([0]);
+		}
 		return buffer;
 	};
 	
@@ -138,7 +143,7 @@
 		var avih = new Chunk('avih');
 		avih.data.writeInt(0, 66665);
 		avih.data.writeInt(4, 0); // MaxBytesPerSec
-		avih.data.writeInt(8, 1); // Padding (in bytes)
+		avih.data.writeInt(8, 2); // Padding (in bytes)
 		avih.data.writeInt(12, 0); // Flags
 		avih.data.writeInt(16, frames); // Total Frames
 		avih.data.writeInt(20, 0); // Initial Frames
