@@ -77,7 +77,11 @@
 	};
 	
 	Buffer.prototype.toString = function() {
-		return String.fromCharCode.apply(null, this.buffer);
+		var str = '';
+		for (var i=0; i < this.buffer.length; ++i) {
+			str += '%' + this.buffer[i].toString(16);
+		}
+		return str;
 	};
 	
 	/**
