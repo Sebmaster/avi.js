@@ -79,7 +79,8 @@
 	Buffer.prototype.toString = function() {
 		var str = '';
 		for (var i=0; i < this.buffer.length; ++i) {
-			str += '%' + this.buffer[i].toString(16);
+			var numStr = this.buffer[i].toString(16);
+			str += '%' + numStr.length == 1 ? '0' + numStr : numStr;
 		}
 		return str;
 	};
