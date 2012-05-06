@@ -166,7 +166,7 @@
 		
 		var movi = new List('movi');
 		for (var i=0; i < this.streams.length; ++i) {
-			movi.elements.push(this.streams[i].getDataBuffer(i));
+			movi.elements.push.apply(movi.elements, this.streams[i].getDataBuffer(i));
 		}
 		
 		var moviBuf = movi.getBuffer();
@@ -236,11 +236,13 @@
 	};
 	
 	AVIJS.Stream.prototype.getDataBuffer = function(idx) {
-		var chk = new Chunk((idx < 10 ? '0' + idx : idx) + 'db');
+		var chunks = [];
 		for (var i=0; i < this.frames.length; ++i) {
+			var chk = new Chunk((idx < 10 ? '0' + idx : idx) + 'db');
 			chk.data.appendArray(this.frames[i]);
+			chunks.push(chk);
 		}
-		return chk;
+		return chunks;
 	};
 	
 	window['AVIJS'] = AVIJS;
