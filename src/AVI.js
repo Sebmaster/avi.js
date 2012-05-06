@@ -83,7 +83,6 @@
 		avih.data.writeInt(44, 0);
 		avih.data.writeInt(48, 0);
 		avih.data.writeInt(52, 0);
-		//TODO: Write main header
 		
 		var hdrl = new AVIJS.List('hdrl');
 		hdrl.elements.push(avih);
