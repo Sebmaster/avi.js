@@ -80,7 +80,7 @@
 		var str = '';
 		for (var i=0; i < this.buffer.length; ++i) {
 			var numStr = this.buffer[i].toString(16);
-			str += '%' + numStr.length == 1 ? '0' + numStr : numStr;
+			str += '%' + (numStr.length == 1 ? '0' + numStr : numStr);
 		}
 		return str;
 	};
