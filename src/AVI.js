@@ -211,7 +211,7 @@
 		var list = new List('strl');
 		var strh = new Chunk('strh');
 		strh.data.writeString(0, 'vids'); // fourCC
-		strh.data.writeInt(4, 0); // Uncompressed
+		strh.data.writeString(4, 'DIB '); // Uncompressed
 		strh.data.writeInt(8, 0); // Flags
 		strh.data.writeShort(12, 1); // Priority
 		strh.data.writeShort(14, 0); // Language
