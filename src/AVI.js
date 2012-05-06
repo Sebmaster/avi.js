@@ -46,14 +46,14 @@
 	 * @param {number} num 
 	 */
 	Buffer.prototype.writeLong = function(idx, num) {
-		this.buffer[idx] = 0;
-		this.buffer[idx + 1] = 0;
-		this.buffer[idx + 2] = 0;
-		this.buffer[idx + 3] = 0;
-		this.buffer[idx + 4] = num & 255;
-		this.buffer[idx + 5] = (num >> 8) & 255;
-		this.buffer[idx + 6] = (num >> 16) & 255;
-		this.buffer[idx + 7] = (num >> 24) & 255;
+		this.buffer[idx] = num & 255;
+		this.buffer[idx + 1] = (num >> 8) & 255;
+		this.buffer[idx + 2] = (num >> 16) & 255;
+		this.buffer[idx + 3] = (num >> 24) & 255;
+		this.buffer[idx + 4] = 0;
+		this.buffer[idx + 5] = 0;
+		this.buffer[idx + 6] = 0;
+		this.buffer[idx + 7] = 0;
 	};
 	
 	/**
