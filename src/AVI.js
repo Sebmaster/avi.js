@@ -118,8 +118,8 @@
 	 */
 	function AVIJS() {
 		this.settings = {
-			width: 16,
-			height: 16
+			width: 0,
+			height: 0
 		};
 		
 		this.streams = [];
