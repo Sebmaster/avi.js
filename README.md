@@ -14,13 +14,14 @@ AVIJS is the basic constructor. One avi file is one instance of AVIJS.
 
 	AVIJS.prototype.settings
 
-Settings is a object you can set which contains the following members:
+Settings is an object you can set which contains the following members:
 
 * width
 * height
 
+<!-- -->
 
-		AVIJS.prototype.streams
+	AVIJS.prototype.streams
 
 An array of all streams in the avi.
 
