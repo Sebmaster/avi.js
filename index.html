@@ -2,12 +2,14 @@
 <html>
 	<head>
 		<title>Hi</title>
+		<script src="BlobBuilder.js"></script>
+		<script src="FileSaver.js"></script>
 		<script src="avi.js"></script>
 		<script>
 window.onload = function() {
 	var can = document.getElementById('canvas');
 	var img = new Image();
-	img.src = 'img.gif';
+	img.src = 'img.jpg';
 	img.onload = function(){
 	    can.width = img.width;
 	    can.height = img.height;
@@ -15,14 +17,17 @@ window.onload = function() {
 	    ctx.drawImage(img, 0, 0, img.width, img.height);
 	    
 		var avi = new AVIJS();
-		var stream = new AVIJS.Stream(20, 5, 5);
-		for (var i=0; i < 50; ++i) {
-			stream.addFrame(ctx.getImageData(0, 0, 5, 5).data);
+		avi.settings = {
+			width: img.width,
+			height: img.height
+		};
+		var stream = new AVIJS.Stream(15, img.width, img.height);
+		for (var i=0; i < 100; ++i) {
+			stream.addRGBAFrame(ctx.getImageData(0, 0, img.width, img.height).data);
 		}
 		avi.streams.push(stream);
-		console.log(avi.getBuffer());
-		console.log(avi.getBuffer().length);
-		window.location = 'data:video/avi,' + encodeURIComponent(avi.getBuffer());
+		var buf = avi.getBuffer();
+		saveAs(buf, 'file.avi');
 	}
 }
 		</script>
