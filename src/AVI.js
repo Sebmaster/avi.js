@@ -212,7 +212,7 @@
 	AVIJS.Stream.prototype.addRGBAFrame = function(imgData) {
 		var frame = [];
 		for (var i=0; i < imgData.length; i += 4) {
-			frame.push(imgData[i+1], imgData[i+2], imgData[i]);
+			frame.push(imgData[i+1], imgData[i+2], imgData[i],0);
 		}
 		this.frames.push(frame);
 	};
@@ -244,7 +244,7 @@
 		strf.data.writeInt(4, this.width); // width
 		strf.data.writeInt(8, -this.height); // height
 		strf.data.writeShort(12, 1); // planes
-		strf.data.writeShort(14, 24); // bits per pixel
+		strf.data.writeShort(14, 32); // bits per pixel
 		strf.data.writeInt(16, 0); // compression
 		strf.data.writeInt(20, 0); // image size
 		strf.data.writeInt(24, 0); // x pixels per meter
@@ -264,7 +264,7 @@
 		var offset = 0;
 		for (var i=0; i < this.frames.length; ++i) { // index entries
 			indx.data.writeInt(24 + i * 8, offset); // offset
-			indx.data.writeInt(28 + i * 8, this.frames[i].length + 12); // size
+			indx.data.writeInt(28 + i * 8, this.frames[i].length + 8); // size
 			offset += this.frames[i].length + 8;
 		}
 		list.elements.push(indx);
