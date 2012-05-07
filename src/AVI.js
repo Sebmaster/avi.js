@@ -209,7 +209,7 @@
 		strh.data.writeInt(24, this.fps); // Rate
 		strh.data.writeInt(28, 0); // Startdelay
 		strh.data.writeInt(32, this.frames.length); // Length
-		strh.data.writeInt(36, 0); // suggested buffer size
+		strh.data.writeInt(36, this.width * this.height * 4); // suggested buffer size
 		strh.data.writeInt(40, -1); // quality
 		strh.data.writeInt(44, 0); // sampleSize
 		strh.data.writeShort(48, 0); // Rect left
