@@ -19,6 +19,7 @@ Settings is a object you can set which contains the following members:
 * width
 * height
 
+
 	AVIJS.prototype.streams
 
 An array of all streams in the avi.
