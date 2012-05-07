@@ -18,7 +18,9 @@
 	 * @param {Array.<number>} arr 
 	 */
 	Buffer.prototype.appendArray = function(arr) {
-		this.buffer.push.apply(this.buffer, arr);
+		for (var i=0; i < arr.length; ++i) {
+			this.buffer.push(arr[i]);
+		}
 	};
 	
 	/**
@@ -56,18 +58,12 @@
 	 * @param {Buffer} buf 
 	 */
 	Buffer.prototype.writeBuffer = function(idx, buf) {
-		for (var i=0; i < buf.length; ++i) {
-			this.buffer[idx + i] = buf.buffer[i];
+		var len = buf.length;
+		var myBuf = this.buffer;
+		var remBuf = buf.buffer;
+		for (var i=0; i < len;) {
+			myBuf[idx++] = remBuf[i++];
 		}
-	};
-	
-	Buffer.prototype.toString = function() {
-		var str = '';
-		for (var i=0; i < this.buffer.length; ++i) {
-			var numStr = this.buffer[i].toString(16);
-			str += '%' + (numStr.length == 1 ? '0' + numStr : numStr);
-		}
-		return str;
 	};
 	
 	/**
@@ -78,7 +74,7 @@
 		this.id = id;
 		this.data = new Buffer();
 	};
-	
+
 	Chunk.prototype.getBuffer = function() {
 		var buffer = new Buffer();
 		buffer.writeString(0, this.id);
@@ -174,7 +170,9 @@
 		len += moviBuf.length;
 		
 		buffer.writeInt(4, len);
-		return buffer.toString();
+		var blob = new BlobBuilder();
+		blob.append((new Uint8Array(buffer.buffer)).buffer);
+		return blob.getBlob('video/avi');
 	};
 	
 	/**
