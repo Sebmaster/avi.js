@@ -186,7 +186,7 @@
 		this.frames = [];
 	};
 	
-	AVIJS.Stream.prototype.addFrame = function(imgData) {
+	AVIJS.Stream.prototype.addRGBAFrame = function(imgData) {
 		var frame = [];
 		for (var i=0; i < imgData.length; i += 4) {
 			frame.push(imgData[i+1], imgData[i+2], imgData[i]);
