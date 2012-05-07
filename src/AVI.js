@@ -191,7 +191,7 @@
 	AVIJS.Stream.prototype.addFrame = function(imgData) {
 		var frame = [];
 		for (var i=0; i < imgData.length; i += 4) {
-			frame.push(imgData[i+1], imgData[i+2], imgData[i], 0);
+			frame.push(imgData[i+1], imgData[i+2], imgData[i]);
 		}
 		this.frames.push(frame);
 	};
@@ -209,7 +209,7 @@
 		strh.data.writeInt(24, this.fps); // Rate
 		strh.data.writeInt(28, 0); // Startdelay
 		strh.data.writeInt(32, this.frames.length); // Length
-		strh.data.writeInt(36, this.width * this.height * 4); // suggested buffer size
+		strh.data.writeInt(36, this.width * this.height * 3); // suggested buffer size
 		strh.data.writeInt(40, -1); // quality
 		strh.data.writeInt(44, 0); // sampleSize
 		strh.data.writeShort(48, 0); // Rect left
@@ -223,7 +223,7 @@
 		strf.data.writeInt(4, this.width); // width
 		strf.data.writeInt(8, -this.height); // height
 		strf.data.writeShort(12, 1); // planes
-		strf.data.writeShort(14, 32); // bits per pixel
+		strf.data.writeShort(14, 24); // bits per pixel
 		strf.data.writeInt(16, 0); // compression
 		strf.data.writeInt(20, 0); // image size
 		strf.data.writeInt(24, 0); // x pixels per meter
