@@ -3,6 +3,64 @@
 (function() {
 	
 	/**
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {Array.<number>} bytes 
+	 */
+	function writeBytes(buf, idx, bytes) {
+		for (var i=0; i < bytes.length; ++i) {
+			buf[idx + i] = bytes[i];
+		}
+	}
+	
+	/**
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {number} num 
+	 */
+	function writeShort(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+	}
+	
+	/**
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {number} num 
+	 */
+	function writeInt(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+		buf[idx + 2] = (num >> 16) & 255;
+		buf[idx + 3] = (num >> 24) & 255;
+	}
+	
+	/**
+	 * @param {number} idx
+	 * @param {number} num 
+	 */
+	function writeLong(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+		buf[idx + 2] = (num >> 16) & 255;
+		buf[idx + 3] = (num >> 24) & 255;
+		buf[idx + 4] = 0;
+		buf[idx + 5] = 0;
+		buf[idx + 6] = 0;
+		buf[idx + 7] = 0;
+	};
+	
+	/**
+	 * @param {number} idx
+	 * @param {string} str 
+	 */
+	function writeString(buf, idx, str) {
+		for (var i=0; i < str.length; ++i) {
+			buf[idx + i] = str.charCodeAt(i) & 255;
+		}
+	};
+	
+	/**
 	 * A simple buffer to abstract data types away
 	 * 
 	 * @constructor
