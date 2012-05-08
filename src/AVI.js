@@ -140,28 +140,33 @@
 		this.streams = [];
 	};
 	
+	AVIJS.prototype.getHeaderLength = function() {
+		return 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
+	};
+	
+	AVIJS.prototype.getLength = function() {
+		var len = this.getHeaderLength();
+		for (var i=0; i < this.streams.length; ++i) {
+			len += this.streams[i].getHeaderLength() + this.streams[i].getDataLength();
+		}
+		return len;
+	};
+	
 	AVIJS.prototype.getBuffer = function() {
 		var buffer = new Buffer();
 		buffer.writeString(0, 'RIFF');
 		buffer.writeString(8, 'AVI ');
 		var len = 4;
 		
-		var movi = new List('movi'); // Generate movi part here because we need the data offset in the index header
-		var indexEntries = {};
+		var moviOffset = this.getHeaderLength();
+		var dataOffset = {};
 		var offset = 0;
-		for (var i=0; i < this.streams.length; ++i) {
-			var buf = this.streams[i].getDataBuffer(i);
-			indexEntries[(i < 10 ? '0' + i : i) + 'db'] = offset;
-			movi.elements.push.apply(movi.elements, buf);
-			offset += buf.length;
-		}
-		
-		var moviBuf = movi.getBuffer();
-		
-		
 		var frames = 0;
 		for (var i=0; i < this.streams.length; ++i) {
 			frames += this.streams[i].frames.length;
+			moviOffset += this.streams[i].getHeaderLength();
+			dataOffset[i] = offset;
+			offset += this.streams[i].getDataLength();
 		}
 		
 		var hdrl = new List('hdrl');
@@ -183,11 +188,20 @@
 		hdrl.elements.push(avih);
 		
 		for (var i=0; i < this.streams.length; ++i) {
-			hdrl.elements.push(this.streams[i].getHeaderBuffer(i));
+			hdrl.elements.push(this.streams[i].getHeaderBuffer(i, moviOffset + dataOffset[i]));
 		}
+
 		var hdrlBuf = hdrl.getBuffer();
 		buffer.writeBuffer(8 + len, hdrlBuf);
 		len += hdrlBuf.length;
+		
+		var movi = new List('movi');
+		for (var i=0; i < this.streams.length; ++i) {
+			var buf = this.streams[i].getDataBuffer(i);
+			movi.elements.push.apply(movi.elements, buf);
+		}
+		
+		var moviBuf = movi.getBuffer();
 		
 		buffer.writeBuffer(8 + len, moviBuf); // write movi part afterwards
 		len += moviBuf.length;
@@ -217,7 +231,19 @@
 		this.frames.push(frame);
 	};
 	
-	AVIJS.Stream.prototype.getHeaderBuffer = function(idx) {
+	AVIJS.Stream.prototype.getHeaderLength = function() {
+		return 12 /* strl */ + 8 /* strh */ + 56 /* struct */ + 8 /* strf */ + 40 /* struct */ + 8 /* indx */ + 24 /* struct */ + this.frames.length * 4 * 2;
+	};
+	
+	AVIJS.Stream.prototype.getDataLength = function() {
+		var len = 0;
+		for (var i=0; i < this.frames.length; ++i) {
+			len += 8 + this.frames[i].length + (this.frames[i].length % 2 == 0 ? 0 : 1); // Pad if chunk not in word boundary
+		}
+		return len;
+	};
+	
+	AVIJS.Stream.prototype.getHeaderBuffer = function(idx, dataOffset) {
 		var list = new List('strl');
 		var strh = new Chunk('strh');
 		strh.data.writeString(0, 'vids'); // fourCC
@@ -258,7 +284,7 @@
 		indx.data.appendArray([0, 0x01]); // indexSubType + indexType
 		indx.data.writeInt(4, this.frames.length); // numIndexEntries
 		indx.data.writeString(8, (idx < 10 ? '0' + idx : idx) + 'db'); // chunkID
-		indx.data.writeLong(12, 1056); // data offset
+		indx.data.writeLong(12, dataOffset); // data offset
 		indx.data.writeInt(20, 0); // reserved
 		
 		var offset = 0;
