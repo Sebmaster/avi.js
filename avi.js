@@ -3,114 +3,61 @@
 (function() {
 	
 	/**
-	 * A simple buffer to abstract data types away
-	 * 
-	 * @constructor
-	 * @param {Array.<number>=} arr 
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {Array.<number>} bytes 
 	 */
-	function Buffer(arr) {
-		this.buffer = arr ? arr : [];
-		
-	}
-	Object.defineProperty(Buffer.prototype, 'length', {get: function() { return this.buffer.length; },
-	                               		   			   enumerable : false}); 
-	/**
-	 * @param {Array.<number>} arr 
-	 */
-	Buffer.prototype.appendArray = function(arr) {
-		for (var i=0; i < arr.length; ++i) {
-			this.buffer.push(arr[i]);
+	function writeBytes(buf, idx, bytes) {
+		for (var i=0; i < bytes.length; ++i) {
+			buf[idx + i] = bytes[i];
 		}
-	};
+	}
+	
+	/**
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {number} num 
+	 */
+	function writeShort(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+	}
+	
+	/**
+	 * @param {Uint8Array} buf
+	 * @param {number} idx
+	 * @param {number} num 
+	 */
+	function writeInt(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+		buf[idx + 2] = (num >> 16) & 255;
+		buf[idx + 3] = (num >> 24) & 255;
+	}
 	
 	/**
 	 * @param {number} idx
 	 * @param {number} num 
 	 */
-	Buffer.prototype.writeShort = function(idx, num) {
-		this.buffer[idx] = num & 255;
-		this.buffer[idx + 1] = (num >> 8) & 255;
-	};
-	
-	/**
-	 * @param {number} idx
-	 * @param {number} num 
-	 */
-	Buffer.prototype.writeInt = function(idx, num) {
-		this.buffer[idx] = num & 255;
-		this.buffer[idx + 1] = (num >> 8) & 255;
-		this.buffer[idx + 2] = (num >> 16) & 255;
-		this.buffer[idx + 3] = (num >> 24) & 255;
+	function writeLong(buf, idx, num) {
+		buf[idx] = num & 255;
+		buf[idx + 1] = (num >> 8) & 255;
+		buf[idx + 2] = (num >> 16) & 255;
+		buf[idx + 3] = (num >> 24) & 255;
+		buf[idx + 4] = 0;
+		buf[idx + 5] = 0;
+		buf[idx + 6] = 0;
+		buf[idx + 7] = 0;
 	};
 	
 	/**
 	 * @param {number} idx
 	 * @param {string} str 
 	 */
-	Buffer.prototype.writeString = function(idx, str) {
+	function writeString(buf, idx, str) {
 		for (var i=0; i < str.length; ++i) {
-			this.buffer[idx + i] = str.charCodeAt(i) & 255;
+			buf[idx + i] = str.charCodeAt(i) & 255;
 		}
-	};
-	
-	/**
-	 * @param {number} idx
-	 * @param {Buffer} buf 
-	 */
-	Buffer.prototype.writeBuffer = function(idx, buf) {
-		var len = buf.length;
-		var myBuf = this.buffer;
-		var remBuf = buf.buffer;
-		for (var i=0; i < len;) {
-			myBuf[idx++] = remBuf[i++];
-		}
-	};
-	
-	/**
-	 * @constructor
-	 * @param {string} id
-	 */
-	function Chunk(id) {
-		this.id = id;
-		this.data = new Buffer();
-	};
-
-	Chunk.prototype.getBuffer = function() {
-		var buffer = new Buffer();
-		buffer.writeString(0, this.id);
-		buffer.writeBuffer(8, this.data);
-		if (this.data.length % 2 == 0) {
-			buffer.writeInt(4, this.data.length);
-		} else {
-			buffer.writeInt(4, this.data.length + 1);
-			buffer.appendArray([0]);
-		}
-		return buffer;
-	};
-	
-	/**
-	 * @constructor
- 	 * @param {string} type
-	 */
-	function List(type) {
-		this.type = type;
-		this.elements = [];
-	};
-	
-	List.prototype.getBuffer = function() {
-		var buffer = new Buffer();
-		buffer.writeString(0, 'LIST');
-		buffer.writeString(8, this.type);
-		
-		var len = 4;
-		for (var i=0; i < this.elements.length; ++i) {
-			var buf = this.elements[i].getBuffer();
-			buffer.writeBuffer(len + 8, buf);
-			len += buf.length;
-		}
-		
-		buffer.writeInt(4, len);
-		return buffer;
 	};
 	
 	/**
@@ -125,53 +72,74 @@
 		this.streams = [];
 	};
 	
+	AVIJS.prototype.getHeaderLength = function() {
+		return 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
+	};
+	
+	AVIJS.prototype.getLength = function() {
+		var len = this.getHeaderLength();
+		for (var i=0; i < this.streams.length; ++i) {
+			len += this.streams[i].getHeaderLength() + this.streams[i].getDataLength();
+		}
+		return len;
+	};
+	
 	AVIJS.prototype.getBuffer = function() {
-		var buffer = new Buffer();
-		buffer.writeString(0, 'RIFF');
-		buffer.writeString(8, 'AVI ');
-		var len = 4;
+		var dataOffset = {};
+		var offset = 0;
 		var frames = 0;
+		var streamHeaderLength = 0;
 		for (var i=0; i < this.streams.length; ++i) {
 			frames += this.streams[i].frames.length;
+			streamHeaderLength += this.streams[i].getHeaderLength();
+			dataOffset[i] = offset;
+			offset += this.streams[i].getDataLength();
 		}
+		var moviOffset = this.getHeaderLength() + streamHeaderLength;
 		
-		var hdrl = new List('hdrl');
-		var avih = new Chunk('avih');
-		avih.data.writeInt(0, 66665);
-		avih.data.writeInt(4, 0); // MaxBytesPerSec
-		avih.data.writeInt(8, 2); // Padding (in bytes)
-		avih.data.writeInt(12, 0); // Flags
-		avih.data.writeInt(16, frames); // Total Frames
-		avih.data.writeInt(20, 0); // Initial Frames
-		avih.data.writeInt(24, this.streams.length); // Total Streams
-		avih.data.writeInt(28, 0); // Suggested Buffer size
-		avih.data.writeInt(32, this.settings.width); // pixel width
-		avih.data.writeInt(36, this.settings.height); // pixel height
-		avih.data.writeInt(40, 0); // Reserved int[4]
-		avih.data.writeInt(44, 0);
-		avih.data.writeInt(48, 0);
-		avih.data.writeInt(52, 0);
-		hdrl.elements.push(avih);
+		var buffer = new Uint8Array(moviOffset + offset);
+		writeString(buffer, 0, 'RIFF');
+		writeString(buffer, 8, 'AVI ');
 		
+		writeString(buffer, 12, 'LIST');
+		writeInt(buffer, 16, 68 + streamHeaderLength);
+		writeString(buffer, 20, 'hdrl'); // hdrl list
+		writeString(buffer, 24, 'avih'); // avih chunk
+		writeInt(buffer, 28, 56); // avih size
+		
+		writeInt(buffer, 32, 66665);
+		writeInt(buffer, 36, 0); // MaxBytesPerSec
+		writeInt(buffer, 40, 2); // Padding (in bytes)
+		writeInt(buffer, 44, 0); // Flags
+		writeInt(buffer, 48, frames); // Total Frames
+		writeInt(buffer, 52, 0); // Initial Frames
+		writeInt(buffer, 56, this.streams.length); // Total Streams
+		writeInt(buffer, 60, 0); // Suggested Buffer size
+		writeInt(buffer, 64, this.settings.width); // pixel width
+		writeInt(buffer, 68, this.settings.height); // pixel height
+		writeInt(buffer, 72, 0); // Reserved int[4]
+		writeInt(buffer, 76, 0);
+		writeInt(buffer, 80, 0);
+		writeInt(buffer, 84, 0);
+		
+		var len = 88;
+		offset = 0;
 		for (var i=0; i < this.streams.length; ++i) {
-			hdrl.elements.push(this.streams[i].getHeaderBuffer());
+			len += this.streams[i].writeHeaderBuffer(buffer.subarray(88 + offset), i, moviOffset + dataOffset[i]);
 		}
-		var hdrlBuf = hdrl.getBuffer();
-		buffer.writeBuffer(8 + len, hdrlBuf);
-		len += hdrlBuf.length;
 		
-		var movi = new List('movi');
+		writeString(buffer, len, 'LIST');
+		writeString(buffer, len + 8, 'movi');
+		
+		var moviLen = 4;
 		for (var i=0; i < this.streams.length; ++i) {
-			movi.elements.push.apply(movi.elements, this.streams[i].getDataBuffer(i));
+			moviLen += this.streams[i].writeDataBuffer(buffer.subarray(len + 8 + moviLen), i);
 		}
-		
-		var moviBuf = movi.getBuffer();
-		buffer.writeBuffer(8 + len, moviBuf);
-		len += moviBuf.length;
-		
-		buffer.writeInt(4, len);
+		writeInt(buffer, len + 4, moviLen);
+
+		writeInt(buffer, 4, len + moviLen);
 		var blob = new BlobBuilder();
-		blob.append((new Uint8Array(buffer.buffer)).buffer);
+		blob.append(buffer.buffer);
 		return blob.getBlob('video/avi');
 	};
 	
@@ -187,60 +155,93 @@
 	};
 	
 	AVIJS.Stream.prototype.addRGBAFrame = function(imgData) {
-		var frame = [];
-		for (var i=0; i < imgData.length; i += 4) {
-			frame.push(imgData[i+1], imgData[i+2], imgData[i]);
+		var frame = new Uint8Array(imgData.length);
+		for (var i=0; i < frame.length; i += 4) {
+			frame[i] = imgData[i + 2];
+			frame[i + 1] = imgData[i + 1];
+			frame[i + 2] = imgData[i];
 		}
 		this.frames.push(frame);
 	};
 	
-	AVIJS.Stream.prototype.getHeaderBuffer = function() {
-		var list = new List('strl');
-		var strh = new Chunk('strh');
-		strh.data.writeString(0, 'vids'); // fourCC
-		strh.data.writeString(4, 'DIB '); // Uncompressed
-		strh.data.writeInt(8, 0); // Flags
-		strh.data.writeShort(12, 1); // Priority
-		strh.data.writeShort(14, 0); // Language
-		strh.data.writeInt(16, 0); // Initial frames
-		strh.data.writeInt(20, 1); // Scale
-		strh.data.writeInt(24, this.fps); // Rate
-		strh.data.writeInt(28, 0); // Startdelay
-		strh.data.writeInt(32, this.frames.length); // Length
-		strh.data.writeInt(36, this.width * this.height * 3); // suggested buffer size
-		strh.data.writeInt(40, -1); // quality
-		strh.data.writeInt(44, 0); // sampleSize
-		strh.data.writeShort(48, 0); // Rect left
-		strh.data.writeShort(50, 0); // Rect top
-		strh.data.writeShort(52, this.width); // Rect width
-		strh.data.writeShort(54, this.height); // Rect height
-		list.elements.push(strh);
-		
-		var strf = new Chunk('strf');
-		strf.data.writeInt(0, 40); // struct size
-		strf.data.writeInt(4, this.width); // width
-		strf.data.writeInt(8, -this.height); // height
-		strf.data.writeShort(12, 1); // planes
-		strf.data.writeShort(14, 24); // bits per pixel
-		strf.data.writeInt(16, 0); // compression
-		strf.data.writeInt(20, 0); // image size
-		strf.data.writeInt(24, 0); // x pixels per meter
-		strf.data.writeInt(28, 0); // y pixels per meter
-		strf.data.writeInt(32, 0); // colortable used
-		strf.data.writeInt(36, 0); // colortable important
-		list.elements.push(strf);
-		
-		return list;
+	AVIJS.Stream.prototype.getHeaderLength = function() {
+		return 12 /* strl */ + 8 /* strh */ + 56 /* struct */ + 8 /* strf */ + 40 /* struct */ + 8 /* indx */ + 24 /* struct */ + this.frames.length * 4 * 2;
 	};
 	
-	AVIJS.Stream.prototype.getDataBuffer = function(idx) {
-		var chunks = [];
+	AVIJS.Stream.prototype.getDataLength = function() {
+		var len = 0;
 		for (var i=0; i < this.frames.length; ++i) {
-			var chk = new Chunk((idx < 10 ? '0' + idx : idx) + 'db');
-			chk.data.appendArray(this.frames[i]);
-			chunks.push(chk);
+			len += 8 + this.frames[i].length + (this.frames[i].length % 2 == 0 ? 0 : 1); // Pad if chunk not in word boundary
 		}
-		return chunks;
+		return len;
+	};
+	
+	AVIJS.Stream.prototype.writeHeaderBuffer = function(buf, idx, dataOffset) {
+		writeString(buf, 0, 'LIST');
+		writeInt(buf, 4, 148 + this.frames.length * 4 * 2);
+		writeString(buf, 8, 'strl');
+		writeString(buf, 12, 'strh');
+		writeInt(buf, 16, 56);
+		writeString(buf, 20, 'vids'); // fourCC
+		writeString(buf, 24, 'DIB '); // Uncompressed
+		writeInt(buf, 28, 0); // Flags
+		writeShort(buf, 32, 1); // Priority
+		writeShort(buf, 34, 0); // Language
+		writeInt(buf, 36, 0); // Initial frames
+		writeInt(buf, 40, 1); // Scale
+		writeInt(buf, 44, this.fps); // Rate
+		writeInt(buf, 48, 0); // Startdelay
+		writeInt(buf, 52, this.frames.length); // Length
+		writeInt(buf, 56, this.width * this.height * 3); // suggested buffer size
+		writeInt(buf, 60, -1); // quality
+		writeInt(buf, 64, 0); // sampleSize
+		writeShort(buf, 68, 0); // Rect left
+		writeShort(buf, 70, 0); // Rect top
+		writeShort(buf, 72, this.width); // Rect width
+		writeShort(buf, 74, this.height); // Rect height
+		
+		writeString(buf, 76, 'strf');
+		writeInt(buf, 80, 40);
+		writeInt(buf, 84, 40); // struct size
+		writeInt(buf, 88, this.width); // width
+		writeInt(buf, 92, -this.height); // height
+		writeShort(buf, 96, 1); // planes
+		writeShort(buf, 98, 32); // bits per pixel
+		writeInt(buf, 100, 0); // compression
+		writeInt(buf, 104, 0); // image size
+		writeInt(buf, 108, 0); // x pixels per meter
+		writeInt(buf, 112, 0); // y pixels per meter
+		writeInt(buf, 116, 0); // colortable used
+		writeInt(buf, 120, 0); // colortable important
+		
+		writeString(buf, 124, 'indx');
+		writeInt(buf, 128, 24 + this.frames.length * 4 * 2); // size
+		writeShort(buf, 132, 2); // LongsPerEntry
+		writeBytes(buf, 134, [0, 0x01]); // indexSubType + indexType
+		writeInt(buf, 136, this.frames.length); // numIndexEntries
+		writeString(buf, 140, (idx < 10 ? '0' + idx : idx) + 'db'); // chunkID
+		writeLong(buf, 144, dataOffset); // data offset
+		writeInt(buf, 152, 0); // reserved
+		
+		var offset = 0;
+		for (var i=0; i < this.frames.length; ++i) { // index entries
+			writeInt(buf, 156 + i * 8, offset); // offset
+			writeInt(buf, 160 + i * 8, this.frames[i].length + 8); // size
+			offset += this.frames[i].length + 8;
+		}
+		
+		return 156 + this.frames.length * 4 * 2;
+	};
+	
+	AVIJS.Stream.prototype.writeDataBuffer = function(buf, idx) {
+		var len = 0;
+		for (var i=0; i < this.frames.length; ++i) {
+			writeString(buf, len, (idx < 10 ? '0' + idx : idx) + 'db');
+			writeInt(buf, len + 4, this.frames[i].length);
+			writeBytes(buf, len + 8, this.frames[i]);
+			len += this.frames[i].length + 8;
+		}
+		return len;
 	};
 	
 	window['AVIJS'] = AVIJS;
