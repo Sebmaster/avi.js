@@ -1,6 +1,6 @@
 avi.js
 ===
-simple javascript AVI de-/encoder
+simple javascript AVI encoder
 ---
 
 avi.js makes it possible to generate avi files in pure javascript. I try to keep the api as simple as possible.
