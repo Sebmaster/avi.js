@@ -262,5 +262,6 @@
 		return len;
 	};
 	
-	window['AVIJS'] = AVIJS;
+	var scope = new Function('return this')();
+	scope['AVIJS'] = AVIJS;
 })();
