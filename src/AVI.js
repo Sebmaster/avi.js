@@ -283,7 +283,7 @@
 				case 'stream':
 					avi.streams.push(new AVIJS.Stream(evt.data.fps, evt.data.width, evt.data.height));
 					break;
-				case 'frameRGBA':
+				case 'frameImageData':
 					avi.streams[evt.data.stream].addRGBAFrame(evt.data.frame.data);
 					break;
 				case 'buffer':

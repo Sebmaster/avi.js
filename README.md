@@ -51,7 +51,7 @@ The action string contains one of the following values:
 
 * settings
 * stream
-* frameRGBA
+* frameImageData
 * buffer
 
 ### settings action
@@ -67,7 +67,7 @@ Additional properties:
 
 The stream action adds another stream with the next available index to the avi file.
 
-### frameRGBA action
+### frameImageData action
 
 This action adds another frame to a stream.
 
