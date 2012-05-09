@@ -156,9 +156,17 @@
 		writeInt(buffer, len + 4, moviLen);
 
 		writeInt(buffer, 4, len + moviLen);
-		var blob = new BlobBuilder();
-		blob.append(buffer.buffer);
-		return blob.getBlob('video/avi');
+		
+		var blob;
+		try {
+			blob = new Blob([buffer.buffer], { 'type' : 'video/avi' });
+		} catch (e) {
+			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : typeof WebKitBlobBuilder !== 'undefined' ? WebKitBlobBuilder : typeof MozBlobBuilder !== 'undefined' ? MozBlobBuilder : MSBlobBuilder)();
+			builder.append(buffer.buffer);
+			blob = builder.getBlob('video/avi')
+		}
+		
+		return blob;
 	};
 	
 	/**
@@ -263,5 +271,27 @@
 	};
 	
 	var scope = new Function('return this')();
-	scope['AVIJS'] = AVIJS;
+	
+	if (typeof WorkerLocation !== 'undefined' && scope.location instanceof WorkerLocation) {
+		var avi = new AVIJS();
+		
+		scope.onmessage = function(evt) {
+			switch (evt.data.action) {
+				case 'settings':
+					avi.settings = evt.data.data;
+					break;
+				case 'stream':
+					avi.streams.push(new AVIJS.Stream(evt.data.fps, evt.data.width, evt.data.height));
+					break;
+				case 'frameRGBA':
+					avi.streams[evt.data.stream].addRGBAFrame(evt.data.frame.data);
+					break;
+				case 'buffer':
+					scope.postMessage(avi.getBuffer());
+					break;
+			}
+		};
+	} else {
+		scope['AVIJS'] = AVIJS;
+	}
 })();
