@@ -278,7 +278,7 @@
 		scope.onmessage = function(evt) {
 			switch (evt.data.action) {
 				case 'settings':
-					avi.settings = evt.data.data;
+					avi.settings = evt.data.settings;
 					break;
 				case 'stream':
 					avi.streams.push(new AVIJS.Stream(evt.data.fps, evt.data.width, evt.data.height));
