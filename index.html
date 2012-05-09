@@ -1,13 +1,14 @@
+
 <!DOCTYPE html>
 <html>
 	<head>
 		<title>Hi</title>
-		<script src="BlobBuilder.js"></script>
 		<script src="FileSaver.js"></script>
-		<script src="avi.js"></script>
+		<!-- <script src="../src/AVI.js"></script> -->
 		<script>
-window.onload = function() {
-	var can = document.getElementById('canvas');
+
+function generate() {
+	var can = document.createElement('canvas');
 	var img = new Image();
 	img.src = 'img.jpg';
 	img.onload = function(){
@@ -16,24 +17,46 @@ window.onload = function() {
 	    var ctx = can.getContext('2d');
 	    ctx.drawImage(img, 0, 0, img.width, img.height);
 	    
+		var work = new Worker('avi.js');
+		work.postMessage = work.webkitPostMessage || work.postMessage;
+		
+		work.postMessage({action: 'settings', settings: {width: img.width, height: img.height}});
+		work.postMessage({action: 'stream', width: img.width, height: img.height, fps: document.getElementById('fps').value});
+		for (var i=0; i < document.getElementById('frames').value; ++i) {
+			work.postMessage({action: 'frameImageData', stream: 0, frame: ctx.getImageData(0, 0, img.width, img.height)});
+			//stream.addRGBAFrame(ctx.getImageData(0, 0, img.width, img.height).data);
+		}
+		
+		work.postMessage({action: 'buffer'});
+		
+		work.onmessage = function(data) {
+			saveAs(data.data, 'file.avi');
+		};
+	    /*
 		var avi = new AVIJS();
 		avi.settings = {
 			width: img.width,
 			height: img.height
 		};
 		var stream = new AVIJS.Stream(15, img.width, img.height);
-		for (var i=0; i < 100; ++i) {
+		avi.streams.push(stream);
+		for (var i=0; i < document.getElementById('frames').value; ++i) {
 			stream.addRGBAFrame(ctx.getImageData(0, 0, img.width, img.height).data);
 		}
-		avi.streams.push(stream);
 		var buf = avi.getBuffer();
-		saveAs(buf, 'file.avi');
+		saveAs(buf, 'file.avi');*/
 	}
 }
 		</script>
 	</head>
 	
 	<body>
-		<canvas id="canvas" width="5" height="5"></canvas>
+		<dl>
+			<dt>FPS</dt>
+			<dd><input type="number" id="fps" value="15"></dd>
+			<dt>Frames</dt>
+			<dd><input type="number" id="frames" value="100"></dd>
+			<dd><button onclick="generate()">GO</button></dd>
+		</dl>
 	</body>
 </html>

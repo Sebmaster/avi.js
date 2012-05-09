@@ -1,5 +1,23 @@
 "use strict";
 
+/**
+ *   avi.js is a javascript avi encoder
+ *   @license Copyright (C) 2012 Sebastian Mayr
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ */
+
 (function() {
 	
 	/**
@@ -138,9 +156,17 @@
 		writeInt(buffer, len + 4, moviLen);
 
 		writeInt(buffer, 4, len + moviLen);
-		var blob = new BlobBuilder();
-		blob.append(buffer.buffer);
-		return blob.getBlob('video/avi');
+		
+		var blob;
+		try {
+			blob = new Blob([buffer.buffer], { 'type' : 'video/avi' });
+		} catch (e) {
+			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : typeof WebKitBlobBuilder !== 'undefined' ? WebKitBlobBuilder : typeof MozBlobBuilder !== 'undefined' ? MozBlobBuilder : MSBlobBuilder)();
+			builder.append(buffer.buffer);
+			blob = builder.getBlob('video/avi')
+		}
+		
+		return blob;
 	};
 	
 	/**
@@ -192,7 +218,7 @@
 		writeInt(buf, 44, this.fps); // Rate
 		writeInt(buf, 48, 0); // Startdelay
 		writeInt(buf, 52, this.frames.length); // Length
-		writeInt(buf, 56, this.width * this.height * 3); // suggested buffer size
+		writeInt(buf, 56, this.width * this.height * 4 + 8); // suggested buffer size
 		writeInt(buf, 60, -1); // quality
 		writeInt(buf, 64, 0); // sampleSize
 		writeShort(buf, 68, 0); // Rect left
@@ -244,5 +270,28 @@
 		return len;
 	};
 	
-	window['AVIJS'] = AVIJS;
+	var scope = new Function('return this')();
+	
+	if (typeof WorkerLocation !== 'undefined' && scope.location instanceof WorkerLocation) {
+		var avi = new AVIJS();
+		
+		scope.onmessage = function(evt) {
+			switch (evt.data.action) {
+				case 'settings':
+					avi.settings = evt.data.settings;
+					break;
+				case 'stream':
+					avi.streams.push(new AVIJS.Stream(evt.data.fps, evt.data.width, evt.data.height));
+					break;
+				case 'frameImageData':
+					avi.streams[evt.data.stream].addRGBAFrame(evt.data.frame.data);
+					break;
+				case 'buffer':
+					scope.postMessage(avi.getBuffer());
+					break;
+			}
+		};
+	} else {
+		scope['AVIJS'] = AVIJS;
+	}
 })();
