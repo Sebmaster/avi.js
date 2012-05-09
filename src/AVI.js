@@ -163,7 +163,7 @@
 		} catch (e) {
 			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : WebKitBlobBuilder)();
 			builder.append(buffer.buffer);
-			blob = builder.getBlob('video/avi')
+			blob = builder.getBlob('video/avi');
 		}
 		
 		return blob;
