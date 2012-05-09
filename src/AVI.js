@@ -161,7 +161,7 @@
 		try {
 			blob = new Blob([buffer.buffer], { 'type' : 'video/avi' });
 		} catch (e) {
-			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : typeof WebKitBlobBuilder !== 'undefined' ? WebKitBlobBuilder : typeof MozBlobBuilder !== 'undefined' ? MozBlobBuilder : MSBlobBuilder)();
+			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : WebKitBlobBuilder)();
 			builder.append(buffer.buffer);
 			blob = builder.getBlob('video/avi')
 		}
