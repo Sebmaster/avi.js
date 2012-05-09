@@ -172,6 +172,8 @@
 	/**
 	 * @constructor
  	 * @param {number} fps
+ 	 * @param {number} width
+ 	 * @param {number} height
 	 */
 	AVIJS.Stream = function(fps, width, height) {
 		this.fps = fps;
