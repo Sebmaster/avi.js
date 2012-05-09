@@ -14,10 +14,9 @@
 
 	<target name="compile">
 		<compilejs compilationLevel="simple" warning="verbose" output="${TARGET}">
-			<!--
 			<externs dir="${PREFIX}/externs">
+				<file name="Worker.js" />
 	      	</externs>
-	      	-->
 
 	  		<sources dir="${src}">
 				<file name="AVI.js" />

@@ -278,15 +278,17 @@
 		var avi = new AVIJS();
 		
 		scope.onmessage = function(evt) {
+			/** @type {{fps: number, width: number, height: number}|{stream: number, frame: ImageData}} */
+			var data = evt.data;
 			switch (evt.data.action) {
 				case 'settings':
-					avi.settings = evt.data.settings;
+					avi.settings = data.settings;
 					break;
 				case 'stream':
-					avi.streams.push(new AVIJS.Stream(evt.data.fps, evt.data.width, evt.data.height));
+					avi.streams.push(new AVIJS.Stream(data.fps, data.width, data.height));
 					break;
 				case 'frameImageData':
-					avi.streams[evt.data.stream].addRGBAFrame(evt.data.frame.data);
+					avi.streams[data.stream].addRGBAFrame(data.frame.data);
 					break;
 				case 'buffer':
 					scope.postMessage(avi.getBuffer());
