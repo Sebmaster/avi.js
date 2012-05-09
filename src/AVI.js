@@ -218,7 +218,7 @@
 		writeInt(buf, 44, this.fps); // Rate
 		writeInt(buf, 48, 0); // Startdelay
 		writeInt(buf, 52, this.frames.length); // Length
-		writeInt(buf, 56, this.width * this.height * 3); // suggested buffer size
+		writeInt(buf, 56, this.width * this.height * 4 + 8); // suggested buffer size
 		writeInt(buf, 60, -1); // quality
 		writeInt(buf, 64, 0); // sampleSize
 		writeShort(buf, 68, 0); // Rect left
