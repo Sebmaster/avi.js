@@ -205,6 +205,9 @@
 	};
 	
 	AVIJS.Stream.prototype.writeHeaderBuffer = function(buf, idx, dataOffset) {
+		var hexIdx = idx.toString(16) + 'db';
+		if (hexIdx.length === 3) hexIdx = '0' + hexIdx;
+		
 		writeString(buf, 0, 'LIST');
 		writeInt(buf, 4, 148 + this.frames.length * 4 * 2);
 		writeString(buf, 8, 'strl');
@@ -247,7 +250,7 @@
 		writeShort(buf, 132, 2); // LongsPerEntry
 		writeBytes(buf, 134, [0, 0x01]); // indexSubType + indexType
 		writeInt(buf, 136, this.frames.length); // numIndexEntries
-		writeString(buf, 140, (idx < 10 ? '0' + idx : idx) + 'db'); // chunkID
+		writeString(buf, 140, hexIdx); // chunkID
 		writeLong(buf, 144, dataOffset); // data offset
 		writeInt(buf, 152, 0); // reserved
 		
@@ -263,8 +266,11 @@
 	
 	AVIJS.Stream.prototype.writeDataBuffer = function(buf, idx) {
 		var len = 0;
+		var hexIdx = idx.toString(16) + 'db';
+		if (hexIdx.length === 3) hexIdx = '0' + hexIdx;
+		
 		for (var i=0; i < this.frames.length; ++i) {
-			writeString(buf, len, (idx < 10 ? '0' + idx : idx) + 'db');
+			writeString(buf, len, hexIdx);
 			writeInt(buf, len + 4, this.frames[i].length);
 			writeBytes(buf, len + 8, this.frames[i]);
 			len += this.frames[i].length + 8;
