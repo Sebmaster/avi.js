@@ -78,6 +78,18 @@
 		}
 	}
 	
+	function getVideoHeaderLength(frameLen) {
+		return 12 /* strl */ + 8 /* strh */ + 56 /* struct */ + 8 /* strf */ + 40 /* struct */ + 8 /* indx */ + 24 /* struct */ + frameLen * 4 * 2;
+	}
+	
+	function getVideoDataLength(frames) {
+		var len = 0;
+		for (var i=0; i < frames.length; ++i) {
+			len += 8 + frames[i].length + (frames[i].length % 2 == 0 ? 0 : 1); // Pad if chunk not in word boundary
+		}
+		return len;
+	}
+	
 	/**
 	 * @constructor 
 	 */
@@ -87,17 +99,14 @@
 			height: 0
 		};
 		
+		/** @type {Array.<AVIJS.Stream>} */
 		this.streams = [];
 	};
 	
-	AVIJS.prototype.getHeaderLength = function() {
-		return 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
-	};
-	
 	AVIJS.prototype.getLength = function() {
-		var len = this.getHeaderLength();
+		var len = 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
 		for (var i=0; i < this.streams.length; ++i) {
-			len += this.streams[i].getHeaderLength() + this.streams[i].getDataLength();
+			len += getVideoHeaderLength(this.streams[i].frames.length) + getVideoDataLength(this.streams[i].frames);
 		}
 		return len;
 	};
@@ -109,11 +118,11 @@
 		var streamHeaderLength = 0;
 		for (var i=0; i < this.streams.length; ++i) {
 			frames += this.streams[i].frames.length;
-			streamHeaderLength += this.streams[i].getHeaderLength();
+			streamHeaderLength += getVideoHeaderLength(this.streams[i].frames.length);
 			dataOffset[i] = offset;
-			offset += this.streams[i].getDataLength();
+			offset += getVideoDataLength(this.streams[i].frames);
 		}
-		var moviOffset = this.getHeaderLength() + streamHeaderLength;
+		var moviOffset = streamHeaderLength + 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
 		
 		var buffer = new Uint8Array(moviOffset + offset);
 		writeString(buffer, 0, 'RIFF');
@@ -190,18 +199,6 @@
 			frame[i + 2] = imgData[i];
 		}
 		this.frames.push(frame);
-	};
-	
-	AVIJS.Stream.prototype.getHeaderLength = function() {
-		return 12 /* strl */ + 8 /* strh */ + 56 /* struct */ + 8 /* strf */ + 40 /* struct */ + 8 /* indx */ + 24 /* struct */ + this.frames.length * 4 * 2;
-	};
-	
-	AVIJS.Stream.prototype.getDataLength = function() {
-		var len = 0;
-		for (var i=0; i < this.frames.length; ++i) {
-			len += 8 + this.frames[i].length + (this.frames[i].length % 2 == 0 ? 0 : 1); // Pad if chunk not in word boundary
-		}
-		return len;
 	};
 	
 	AVIJS.Stream.prototype.writeHeaderBuffer = function(buf, idx, dataOffset) {
