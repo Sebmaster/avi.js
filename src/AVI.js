@@ -103,14 +103,6 @@
 		this.streams = [];
 	};
 	
-	AVIJS.prototype.getLength = function() {
-		var len = 12 /* RIFF */ + 12 /* hdrl */ + 8 /* avih */ + 56 /* struct */ + 12 /* movi */;
-		for (var i=0; i < this.streams.length; ++i) {
-			len += getVideoHeaderLength(this.streams[i].frames.length) + getVideoDataLength(this.streams[i].frames);
-		}
-		return len;
-	};
-	
 	AVIJS.prototype.getBuffer = function() {
 		var dataOffset = {};
 		var offset = 0;
