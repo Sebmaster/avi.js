@@ -66,7 +66,7 @@
 		buf[idx + 5] = 0;
 		buf[idx + 6] = 0;
 		buf[idx + 7] = 0;
-	};
+	}
 	
 	/**
 	 * @param {number} idx
@@ -76,7 +76,7 @@
 		for (var i=0; i < str.length; ++i) {
 			buf[idx + i] = str.charCodeAt(i) & 255;
 		}
-	};
+	}
 	
 	/**
 	 * @constructor 
