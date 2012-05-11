@@ -159,7 +159,7 @@
 		
 		var blob;
 		try {
-			blob = new Blob([buffer.buffer], { 'type' : 'video/avi' });
+			blob = new Blob([buffer.buffer], { 'type' : 'video/msvideo' });
 		} catch (e) {
 			var builder = new (typeof BlobBuilder !== 'undefined' ? BlobBuilder : WebKitBlobBuilder)();
 			builder.append(buffer.buffer);
