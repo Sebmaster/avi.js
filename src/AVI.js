@@ -193,6 +193,17 @@
 		this.frames.push(frame);
 	};
 	
+	/**
+	 * Add a 2d canvas context to the frames.
+	 * 
+	 * @param {HTMLCanvasElement} canvas the canvas element
+	 */
+	AVIJS.Stream.prototype.add2DCanvasFrame = function(canvas) {
+		var ctx = /** @type {CanvasRenderingContext2D} */(canvas.getContext('2d'));
+		
+		this.addRGBAFrame(ctx.getImageData(0, 0, canvas.width, canvas.height));
+	};
+	
 	AVIJS.Stream.prototype.writeHeaderBuffer = function(buf, idx, dataOffset) {
 		var hexIdx = idx.toString(16) + 'db';
 		if (hexIdx.length === 3) hexIdx = '0' + hexIdx;
