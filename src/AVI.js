@@ -210,6 +210,17 @@
 	};
 	
 	/**
+	 * Add a 3d canvas context to the frames.
+	 * 
+	 * @param {Object} ctx the 3d canvas object
+	 * @param {number} width the width of the canvas
+	 * @param {number} height the height of the canvas
+	 */
+	AVIJS.Stream.prototype.add3DCanvasFrame = function(ctx, width, height) {
+		this.addRGBAFrame(ctx.readPixels(0, 0, width, height, ctx.RGBA, ctx.UNSIGNED_BYTE));
+	};
+	
+	/**
 	 * Writes the avi header to a buffer.
 	 * 
 	 * @param {Uint8Array} buf the buffer to write to
