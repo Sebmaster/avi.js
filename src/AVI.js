@@ -183,6 +183,11 @@
 		this.frames = [];
 	};
 	
+	/**
+	 * Adds a frame-array to the frame list.
+	 * 
+	 * @param {Array.<number>|ImageData} imgData the data of an image; a flat array containing (r, g, b, a) values.
+	 */
 	AVIJS.Stream.prototype.addRGBAFrame = function(imgData) {
 		var frame = new Uint8Array(imgData.length);
 		for (var i=0; i < frame.length; i += 4) {
@@ -204,6 +209,13 @@
 		this.addRGBAFrame(ctx.getImageData(0, 0, canvas.width, canvas.height));
 	};
 	
+	/**
+	 * Writes the avi header to a buffer.
+	 * 
+	 * @param {Uint8Array} buf the buffer to write to
+	 * @param {number} idx the stream index
+	 * @param {number} dataOffset the offset of the stream data from the beginning of the file
+	 */
 	AVIJS.Stream.prototype.writeHeaderBuffer = function(buf, idx, dataOffset) {
 		var hexIdx = idx.toString(16) + 'db';
 		if (hexIdx.length === 3) hexIdx = '0' + hexIdx;
@@ -264,6 +276,12 @@
 		return 156 + this.frames.length * 4 * 2;
 	};
 	
+	/**
+	 * Writes the frame data of a stream to the buffer.
+	 * 
+	 * @param {Uint8Array} buf the buffer to write to
+	 * @param {number} idx the stream index
+	 */
 	AVIJS.Stream.prototype.writeDataBuffer = function(buf, idx) {
 		var len = 0;
 		var hexIdx = idx.toString(16) + 'db';
